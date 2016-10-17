@@ -19,15 +19,31 @@ io.on('connection', socket => {
     console.log("Client disconnected");
   });
 
+  // socket.emit sends the message once to the new user
+  // who just joined the socket
+  socket.emit('newMessage', {
+    from: 'Admin',
+    text: 'Welcome to Safe House Chat Application',
+    createdAt: new Date().getTime()
+  });
+
+  // socket.broadcast.emit sends the message to everyone but yourself
+  // this is a way for everyone to know you just joined the socket
+  socket.broadcast.emit('newMessage', {
+    from: 'Admin',
+    text: 'Your guest has arrived',
+    createdAt: new Date().getTime()
+  });
+
   socket.on('createMessage', (message) => {
     console.log("Here is your message from the client ", message);
-    io.emit('newMessage', {
+    socket.broadcast.emit('newMessage', {
       from: message.from,
       text: message.text,
       createdAt: new Date().getTime()
     });
   });
-  
+
 });
 
 server.listen(PORT, () => {
