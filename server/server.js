@@ -9,6 +9,7 @@ const app = express();
 
 const server = http.createServer(app);
 const io = socketIO(server);
+const { generateMessage } = require('./utilities/message');
 
 app.use(express.static(publicPath));
 
@@ -21,27 +22,14 @@ io.on('connection', socket => {
 
   // socket.emit sends the message once to the new user
   // who just joined the socket
-  socket.emit('newMessage', {
-    from: 'Admin',
-    text: 'Welcome to Safe House Chat Application',
-    createdAt: new Date().getTime()
-  });
+  socket.emit('newMessage', generateMessage('Admin', 'Welcome to Safe House Chat'));
 
   // socket.broadcast.emit sends the message to everyone but yourself
   // this is a way for everyone to know you just joined the socket
-  socket.broadcast.emit('newMessage', {
-    from: 'Admin',
-    text: 'Your guest has arrived',
-    createdAt: new Date().getTime()
-  });
+  socket.broadcast.emit('newMessage', generateMessage('Admin', 'Your guest has arrived'));
 
   socket.on('createMessage', (message) => {
-    console.log("Here is your message from the client ", message);
-    socket.broadcast.emit('newMessage', {
-      from: message.from,
-      text: message.text,
-      createdAt: new Date().getTime()
-    });
+    socket.broadcast.emit('newMessage', generateMessage(message.from, message.text));
   });
 
 });
