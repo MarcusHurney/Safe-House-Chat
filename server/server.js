@@ -28,7 +28,7 @@ io.on('connection', socket => {
   // this is a way for everyone to know you just joined the socket
   socket.broadcast.emit('newMessage', generateMessage('Admin', 'Your guest has arrived'));
 
-  socket.on('createMessage', (message) => {
+  socket.on('createMessage', (message, callback) => {
     socket.broadcast.emit('newMessage', generateMessage(message.from, message.text));
   });
 
