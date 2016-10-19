@@ -3,21 +3,35 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title></title>
+    <title>Safe House Chat</title>
+    <link rel="stylesheet" href="/css/styles.css" />
   </head>
-  <body>
-      <ol id="messages"></ol>
-      <form id="message-form">
-        <input
-          name="message"
-          type="text"
-          placeholder="message"/>
-        <button>Send</button>
-      </form>
-      <button id="send-location">Send Location</button>
-      <!-- Load Scripts -->
-      <script src="/js/libs/jquery.min.js"></script>
-      <script src="/socket.io/socket.io.js"></script>
-      <script src="/js/index.js"></script>
+  <body class="chat">
+
+    <div class="chat__sidebar">
+      <h3>People</h3>
+      <div id="users"></div>
+    </div>
+
+    <div class="chat__main">
+      <ol id="messages" class="chat__messages"></ol>
+      <div class="chat__footer">
+        <form id="message-form">
+          <input
+            name="message"
+            type="text"
+            placeholder="message"
+            autofocus
+            autocomplete="off" />
+          <button>Send</button>
+        </form>
+        <button id="send-location">Send location</button>
+      </div>
+    </div>
+
+    <!-- Load Scripts -->
+    <script src="/js/libs/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/index.js"></script>
   </body>
 </html>

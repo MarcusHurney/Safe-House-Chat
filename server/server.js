@@ -29,7 +29,10 @@ io.on('connection', socket => {
   socket.broadcast.emit('newMessage', generateMessage('Admin', 'Your guest has arrived'));
 
   socket.on('createMessage', (message, callback) => {
-    socket.broadcast.emit('newMessage', generateMessage(message.from, message.text));
+    // io.emit sends newMessage to all connected sockets
+    io.emit('newMessage', generateMessage(message.from, message.text));
+    // enacts callback which clears messageTextBox on client-side
+    callback();
   });
 
   socket.on('createLocationMessage', (coords) => {
