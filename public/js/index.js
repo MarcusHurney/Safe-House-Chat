@@ -1,5 +1,34 @@
 var socket = io();
 
+function scrollToBottom() {
+
+  // Selectors -------------------------------------->
+  var messages = jQuery('#messages');
+  // this will be the latest message by using last-child selector
+  var newMessage = messages.children('li:last-child');
+
+  // Heights -------------------------------------->
+  var clientHeight = messages.prop('clientHeight');
+  var scrollTop = messages.prop('scrollTop');
+  var scrollHeight = messages.prop('scrollHeight');
+
+  // this takes into account padding as well
+  var newMessageHeight = newMessage.innerHeight();
+
+  // prev method returns second to last child / previous child
+  var lastMessageHeight = newMessage.prev().innerHeight();
+
+  console.log("Client Height ", clientHeight); // window's total height
+  console.log("Scroll Top ", scrollTop); // the amount the client has scrolled down from the top
+  console.log("Scroll Height ", scrollHeight); // the total height of the messages div (total height)
+
+  // if the client is NEAR the bottom, move client window to the bottom of the messages
+  // div in the instance of a new message
+  if (clientHeight + scrollTop + newMessageHeight + lastMessageHeight >= scrollHeight) {
+    // move client to the bottom of the messages div
+    messages.scrollTop(scrollHeight);
+  }
+}
 socket.on('connect', function () {
   console.log("Connected to server");
 });
@@ -11,24 +40,43 @@ socket.on('disconnect', function () {
 // newMessage is what the server returns when the client
 // run createMessage
 socket.on('newMessage', function (message) {
-  // create li element
-  var li = jQuery('<li></li>');
-  // insert the message's content into the li
-  li.text(`${message.from}: ${message.text}`);
-  // append li to the DOM
-  jQuery('#messages').append(li);
+  // formated time of message using moment
+  var formattedTime = moment(message.createdAt).format('h:mm a');
+
+  // create message template variable
+  var template = jQuery('#message-template').html();
+
+  // pass mustache the template and associated data from message
+  var html = Mustache.render(template, {
+    text: message.text,
+    from: message.from,
+    createdAt: formattedTime
+  });
+
+  // append message template to the #messages div
+  jQuery('#messages').append(html);
+
+  scrollToBottom();
 });
 
 socket.on('newLocationMessage', function (message) {
-  // create li element
-  var li = jQuery('<li></li>');
-  // target=_blank open page in a new tab
-  var a = jQuery('<a target="_blank">My Current Location</a>');
-  li.text(`${message.from}: `);
-  // set anchor tag to google maps page of user's location
-  a.attr('href', message.url);
-  li.append(a);
-  jQuery('#messages').append(li);
+  // formated time of message using moment
+  var formattedTime = moment(message.createdAt).format('h:mm a');
+
+  // create message template variable
+  var template = jQuery('#location-message-template').html();
+
+  // pass mustache the template and associated data from message
+  var html = Mustache.render(template, {
+    url: message.url,
+    from: message.from,
+    createdAt: formattedTime
+  });
+
+  // append message template to the #messages div
+  jQuery('#messages').append(html);
+
+  scrollToBottom();
 })
 
 jQuery('#message-form').on('submit', function (event) {
