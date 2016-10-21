@@ -9,7 +9,13 @@ const app = express();
 
 const server = http.createServer(app);
 const io = socketIO(server);
+
 const { generateMessage, generateLocationMessage } = require('./utilities/message');
+const { isRealString } = require('./utilities/validation');
+const { Users } = require('./utilities/users');
+
+// declare instance of users
+var users = new Users();
 
 app.use(express.static(publicPath));
 
@@ -18,15 +24,45 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     console.log("Client disconnected");
+    // remove user incase user already exists in list
+    var removedUser = users.removeUser(socket.id);
+
+    if (removedUser) {
+      // send new users list to everyone in chatroom because users list has changed
+      io.to(removedUser.room).emit('updateUserList', users.getUserList(removedUser.room));
+      io.to(removedUser.room).emit('newMessage', generateMessage('Admin', `${removedUser.name} has left`));
+    }
+
   });
 
-  // socket.emit sends the message once to the new user
-  // who just joined the socket
-  socket.emit('newMessage', generateMessage('Admin', 'Welcome to Safe House Chat'));
+  socket.on('join', (params, callback) => {
+    if (!isRealString(params.name) || !isRealString(params.room)) {
+      return callback('Name and room name are required');
+    }
 
-  // socket.broadcast.emit sends the message to everyone but yourself
-  // this is a way for everyone to know you just joined the socket
-  socket.broadcast.emit('newMessage', generateMessage('Admin', 'Your guest has arrived'));
+    // join the room specified in the params object
+    socket.join(params.room);
+
+    // remove user incase user already exists in list
+    users.removeUser(socket.id);
+
+    // add a user to users list
+    users.addUser(socket.id, params.name, params.room);
+
+    // send new users list to everyone in chatroom because users list has changed
+    io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+
+    // socket.emit sends the message once to the new user
+    // who just joined the socket
+    socket.emit('newMessage', generateMessage('Admin', 'Welcome to Safe House Chat'));
+
+    // socket.broadcast.emit sends the message to everyone but yourself
+    // this is a way for everyone to know you just joined the socket
+    socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has arrived`));
+    callback();
+  });
+
+
 
   socket.on('createMessage', (message, callback) => {
     // io.emit sends newMessage to all connected sockets

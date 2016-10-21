@@ -8,19 +8,15 @@ function scrollToBottom() {
   var newMessage = messages.children('li:last-child');
 
   // Heights -------------------------------------->
-  var clientHeight = messages.prop('clientHeight');
-  var scrollTop = messages.prop('scrollTop');
-  var scrollHeight = messages.prop('scrollHeight');
+  var clientHeight = messages.prop('clientHeight'); // window's total height
+  var scrollTop = messages.prop('scrollTop'); // the amount the client has scrolled down from the top
+  var scrollHeight = messages.prop('scrollHeight'); // the total height of the messages div (total height)
 
   // this takes into account padding as well
   var newMessageHeight = newMessage.innerHeight();
 
   // prev method returns second to last child / previous child
   var lastMessageHeight = newMessage.prev().innerHeight();
-
-  console.log("Client Height ", clientHeight); // window's total height
-  console.log("Scroll Top ", scrollTop); // the amount the client has scrolled down from the top
-  console.log("Scroll Height ", scrollHeight); // the total height of the messages div (total height)
 
   // if the client is NEAR the bottom, move client window to the bottom of the messages
   // div in the instance of a new message
@@ -30,11 +26,29 @@ function scrollToBottom() {
   }
 }
 socket.on('connect', function () {
-  console.log("Connected to server");
+  var params = jQuery.deparam(window.location.search);
+
+  socket.emit('join', params, function (err) {
+    if (err) {
+      alert(err);
+      window.location.href = '/';
+    } else {
+      console.log('No error');
+    }
+  });
 });
 
 socket.on('disconnect', function () {
   console.log("Disconnected from server");
+});
+
+socket.on('updateUserList', function (usersList) {
+  var ul = jQuery('<ul></ul>');
+  usersList.forEach(function (user) {
+    ul.append(jQuery('<li></li>').text(user));
+  });
+
+  jQuery('#users').html(ul);
 });
 
 // newMessage is what the server returns when the client
