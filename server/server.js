@@ -20,10 +20,8 @@ var users = new Users();
 app.use(express.static(publicPath));
 
 io.on('connection', socket => {
-  console.log("New user connected");
 
   socket.on('disconnect', () => {
-    console.log("Client disconnected");
     // remove user incase user already exists in list
     var removedUser = users.removeUser(socket.id);
 
@@ -65,14 +63,24 @@ io.on('connection', socket => {
 
 
   socket.on('createMessage', (message, callback) => {
-    // io.emit sends newMessage to all connected sockets
-    io.emit('newMessage', generateMessage(message.from, message.text));
+    var user = users.getUser(socket.id);
+    // if a user is not found or the user's message is not a real message don't send
+    if (user && isRealString(message.text)) {
+      // io.emit sends newMessage to all connected sockets
+      io.to(user.room).emit('newMessage', generateMessage(user.name, message.text));
+    }
+
     // enacts callback which clears messageTextBox on client-side
     callback();
   });
 
   socket.on('createLocationMessage', (coords) => {
-    io.emit('newLocationMessage', generateLocationMessage('Admin', coords.latitude, coords.longitude));
+    // fetch user
+    var user = users.getUser(socket.id);
+    // only send message if user exists
+    if (user) {
+      io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude));
+    }
   });
 
 });
