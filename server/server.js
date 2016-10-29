@@ -2,6 +2,7 @@ const path = require('path');
 const http = require('http');
 const publicPath = path.join(__dirname, '../public');
 const socketIO = require('socket.io');
+const crypto = require('crypto');
 
 const express = require('express');
 const PORT = process.env.PORT || 3000;
@@ -34,10 +35,42 @@ io.on('connection', socket => {
   });
 
   socket.on('join', (params, callback) => {
+    // checks to see if a user is creating a room
+    // if so, a random room will be created
+    if (params.create === "") {
+      // create random room using crypto
+      crypto.randomBytes(20, function(err, buf) {
+        if (err) { return; }
+
+        // create room variable
+        const randomRoom = buf.toString('hex');
+
+        // join the room specified in the params object
+        socket.join(randomRoom);
+
+        // remove user incase user already exists in list
+        users.removeUser(socket.id);
+
+        // add a user to users list
+        users.addUser(socket.id, params.name, randomRoom);
+
+        // send new users list to everyone in chatroom because users list has changed
+        io.to(randomRoom).emit('updateUserList', users.getUserList(randomRoom));
+
+        // socket.emit sends the message once to the new user
+        // who just joined the socket
+        socket.emit('newMessage',
+        generateMessage('Admin',
+        `Welcome to Safe House Chat! Your secret room number is ${randomRoom}`));
+
+        callback();
+      });
+      return;
+    }
+    // a user is not creating a room, so a user is joining a room
     if (!isRealString(params.name) || !isRealString(params.room)) {
       return callback('Name and room name are required');
     }
-
     // join the room specified in the params object
     socket.join(params.room);
 
@@ -52,12 +85,13 @@ io.on('connection', socket => {
 
     // socket.emit sends the message once to the new user
     // who just joined the socket
-    socket.emit('newMessage', generateMessage('Admin', 'Welcome to Safe House Chat'));
+    socket.emit('newMessage', generateMessage('Admin', `Welcome to Safe House Chat!`));
 
     // socket.broadcast.emit sends the message to everyone but yourself
     // this is a way for everyone to know you just joined the socket
     socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has arrived`));
     callback();
+
   });
 
 

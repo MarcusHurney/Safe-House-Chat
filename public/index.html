@@ -11,18 +11,34 @@
     <div class="centered-form__form">
       <form action="/chat.html">
         <div class="form-field">
-          <h3>Join a Chat</h3>
+          <h3>Join a Room</h3>
         </div>
         <div class="form-field">
           <label>Display Name</label>
           <input type="text" name="name" autofocus />
         </div>
         <div class="form-field">
-          <label>Room Name</label>
+          <label>Room Number</label>
           <input type="text" name="room" autofocus />
         </div>
         <div class="form-field">
           <button>Join</button>
+        </div>
+      </form>
+    </div><!-- .centered-form__form -->
+
+    <div class="centered-form__form">
+      <form action="/chat.html">
+        <div class="form-field">
+          <h3>Create a Room</h3>
+        </div>
+        <div class="form-field">
+          <label>Display Name</label>
+          <input type="text" name="name" autofocus />
+        </div>
+        <input id="createRoom" type="text" name="create" />
+        <div class="form-field">
+          <button>Create</button>
         </div>
       </form>
     </div><!-- .centered-form__form -->
